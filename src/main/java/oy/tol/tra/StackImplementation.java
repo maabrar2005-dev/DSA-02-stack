@@ -1,94 +1,146 @@
+
 package oy.tol.tra;
 
 /**
  * An implementation of the StackInterface.
- * <p>
- * TODO: Students, implement this so that the tests pass.
  * 
- * Note that you need to implement construtor(s) for your concrete StackImplementation, which
- * allocates the internal Object array for the Stack:
- * - a default constructor, calling the StackImplementation(int size) with value of 10.
- * - StackImplementation(int size), which allocates an array of Object's with size.
- *  -- remember to maintain the capacity and/or currentIndex when the stack is manipulated.
+ * The stack uses an Object array to store elements.
+ * Elements are added and removed from the top of the stack.
  */
 public class StackImplementation<E> implements StackInterface<E> {
 
-   private Object [] itemArray;
+   private Object[] itemArray;
    private int capacity;
    private int currentIndex = -1;
    private static final int DEFAULT_STACK_SIZE = 10;
 
    /**
     * Allocates a stack with a default capacity.
-    * @throws StackAllocationException
+    * @throws StackAllocationException if allocation fails.
     */
    public StackImplementation() throws StackAllocationException {
-      // TODO: call the constructor with size parameter with default size of 10.
-      
+      this(DEFAULT_STACK_SIZE);
    }
 
-   /** TODO: Implement so that
-    * - if the size is less than 2, throw StackAllocationException
-    * - if the allocation of the array throws with Java exception,
-    *   throw StackAllocationException.
+   /**
+    * Allocates a stack with the specified capacity.
+    *
     * @param capacity The capacity of the stack.
-    * @throws StackAllocationException If cannot allocate room for the internal array.
+    * @throws StackAllocationException If the capacity is invalid
+    * or the internal array cannot be allocated.
     */
    public StackImplementation(int capacity) throws StackAllocationException {
-      
+
+      if (capacity < 2) {
+         throw new StackAllocationException("Stack capacity must be at least 2.");
+      }
+
+      try {
+         itemArray = new Object[capacity];
+         this.capacity = capacity;
+      } catch (OutOfMemoryError e) {
+         throw new StackAllocationException("Unable to allocate stack storage.");
+      }
    }
 
    @Override
    public int capacity() {
-      // TODO: Implement this
-      
+      return capacity;
    }
 
    @Override
    public void push(E element) throws StackAllocationException, NullPointerException {
-      // TODO: Implement this
-               
+
+      if (element == null) {
+         throw new NullPointerException("Stack cannot contain null elements.");
+      }
+
+      // Increase capacity if the array is full.
+      if (currentIndex == capacity - 1) {
+         int newCapacity;
+
+         try {
+            newCapacity = Math.multiplyExact(capacity, 2);
+            Object[] newArray = new Object[newCapacity];
+
+            // Copy existing elements into the larger array.
+            for (int i = 0; i <= currentIndex; i++) {
+               newArray[i] = itemArray[i];
+            }
+
+            itemArray = newArray;
+            capacity = newCapacity;
+
+         } catch (OutOfMemoryError | ArithmeticException e) {
+            throw new StackAllocationException("Unable to increase stack capacity.");
+         }
+      }
+
+      // Add the element to the top of the stack.
+      itemArray[++currentIndex] = element;
    }
 
    @SuppressWarnings("unchecked")
    @Override
    public E pop() throws StackIsEmptyException {
-      
+
+      if (isEmpty()) {
+         throw new StackIsEmptyException("Cannot pop from an empty stack.");
+      }
+
+      // Retrieve the top element and remove its reference.
+      E element = (E) itemArray[currentIndex];
+      itemArray[currentIndex] = null;
+      currentIndex--;
+
+      return element;
    }
 
    @SuppressWarnings("unchecked")
    @Override
    public E peek() throws StackIsEmptyException {
-      
+
+      if (isEmpty()) {
+         throw new StackIsEmptyException("Cannot peek at an empty stack.");
+      }
+
+      // Return the top element without removing it.
+      return (E) itemArray[currentIndex];
    }
 
    @Override
    public int size() {
-      // TODO: Implement this
-      
+      return currentIndex + 1;
    }
 
    @Override
    public void clear() {
-      // TODO: Implement this
-      
+      // Remove references to all stored elements.
+      for (int i = 0; i <= currentIndex; i++) {
+         itemArray[i] = null;
+      }
+
+      currentIndex = -1;
    }
 
    @Override
    public boolean isEmpty() {
-      // TODO: Implement this
-      
+      return currentIndex == -1;
    }
 
    @Override
    public String toString() {
+
       StringBuilder builder = new StringBuilder("[");
-      for (var index = 0; index <= currentIndex; index++) {
+
+      for (int index = 0; index <= currentIndex; index++) {
          builder.append(itemArray[index].toString());
+
          if (index < currentIndex) {
             builder.append(", ");
          }
       }
+
       builder.append("]");
       return builder.toString();
    }
